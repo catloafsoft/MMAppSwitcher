@@ -9,10 +9,6 @@
 #import <QuartzCore/QuartzCore.h>
 #import "MMAppSwitcher.h"
 
-@interface UIView(Rasterize)
-- (UIImageView *)mm_rasterizedView;
-@end
-
 @interface MMAppSwitcher()
 
 @property (nonatomic, weak) id<MMAppSwitcherDataSource> datasource;
@@ -40,7 +36,7 @@ static UIImageView *rasterizedView(UIView *view);
     return _sharedInstance;
 }
 
-- (void)setDatasource:(id<MMAppSwitcherDataSource>)dataSource {
+- (void)setDataSource:(id<MMAppSwitcherDataSource>)dataSource {
     _datasource = dataSource;
     if (_datasource) {
         [self enableNotifications];
