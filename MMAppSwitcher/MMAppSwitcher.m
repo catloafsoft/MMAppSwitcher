@@ -19,7 +19,6 @@
 @property (nonatomic, strong) UIView *view;
 @property (nonatomic, strong) UIWindow *window;
 @property (nonatomic, strong) UIWindow *originalWindow;
-@property (nonatomic, assign) BOOL showStatusBar;
 
 @end
 
@@ -108,12 +107,9 @@ static UIImageView *rasterizedView(UIView *view);
     [self.view removeFromSuperview];
     self.view = nil;
     self.window.hidden = YES;
-//    [[UIApplication sharedApplication] setStatusBarHidden:self.showStatusBar];
 }
 
 - (void)appWillEnterBackground {
-//    self.showStatusBar = [[UIApplication sharedApplication] isStatusBarHidden];
-//    [[UIApplication sharedApplication] setStatusBarHidden:YES];
     [self loadCard];
     if (self.view)
         self.window.hidden = NO;
