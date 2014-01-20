@@ -25,6 +25,8 @@
 
 static MMAppSwitcher *_sharedInstance;
 
+static UIImageView *rasterizedView(UIView *view);
+
 @implementation MMAppSwitcher
 
 + (instancetype)sharedInstance {
@@ -39,7 +41,7 @@ static MMAppSwitcher *_sharedInstance;
     return _sharedInstance;
 }
 
-- (void)setDataSource:(id<MMAppSwitcherDataSource>)dataSource {
+- (void)setDatasource:(id<MMAppSwitcherDataSource>)dataSource {
     _datasource = dataSource;
     if (_datasource) {
         [self enableNotifications];
@@ -49,8 +51,8 @@ static MMAppSwitcher *_sharedInstance;
 }
 
 - (void)enableNotifications {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterBackground) name:@"UIApplicationWillBeginSuspendAnimationNotification" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
 }
 
 - (void)disableNotifications {
@@ -62,13 +64,13 @@ static MMAppSwitcher *_sharedInstance;
         UIView *view = [self.datasource appSwitcher:self viewForCardWithSize:[self cardSizeForCurrentOrientation]];
         if (view) {
             [self.view removeFromSuperview];
-            UIImageView *cardView = [view mm_rasterizedView];
-            self.view = cardView;
+            self.view = rasterizedView(view);
             self.view.frame = (CGRect){0, 0, self.window.bounds.size};
             [self.window addSubview:self.view];
         } else {
             [self.view removeFromSuperview];
             self.view = nil;
+            self.window.hidden = YES;
         }
     }
 }
@@ -92,9 +94,9 @@ static MMAppSwitcher *_sharedInstance;
     CGRect screenBounds = [UIScreen mainScreen].bounds;
     CGSize cardSize;
     if ([[UIDevice currentDevice] userInterfaceIdiom]==UIUserInterfaceIdiomPhone) {
-        cardSize = (CGSize){ceilf(0.475*screenBounds.size.width), ceilf(0.475*screenBounds.size.height)};
+        cardSize = CGSizeMake(ceilf(0.475*screenBounds.size.width), ceilf(0.475*screenBounds.size.height));
     } else {
-        cardSize = (CGSize){ceilf(0.5*screenBounds.size.width), ceilf(0.5*screenBounds.size.height)};
+        cardSize = CGSizeMake(ceilf(0.5*screenBounds.size.width), ceilf(0.5*screenBounds.size.height));
     }
     return cardSize;
 }
@@ -106,31 +108,29 @@ static MMAppSwitcher *_sharedInstance;
     [self.view removeFromSuperview];
     self.view = nil;
     self.window.hidden = YES;
-    [[UIApplication sharedApplication] setStatusBarHidden:self.showStatusBar];
+//    [[UIApplication sharedApplication] setStatusBarHidden:self.showStatusBar];
 }
 
 - (void)appWillEnterBackground {
-     self.showStatusBar = [[UIApplication sharedApplication] isStatusBarHidden];
-    [[UIApplication sharedApplication] setStatusBarHidden:YES];
+//    self.showStatusBar = [[UIApplication sharedApplication] isStatusBarHidden];
+//    [[UIApplication sharedApplication] setStatusBarHidden:YES];
     [self loadCard];
-    self.window.hidden = NO;
+    if (self.view)
+        self.window.hidden = NO;
 }
 
 @end
 
 
+#pragma mark - Helper function
 
-#pragma mark - Helper category
-
-@implementation UIView(Rasterize)
-
-- (UIImageView *)mm_rasterizedView {
-    self.layer.magnificationFilter = kCAFilterNearest;
-    UIGraphicsBeginImageContextWithOptions(self.bounds.size, self.opaque, 0.0);
-    [self.layer renderInContext:UIGraphicsGetCurrentContext()];
-    UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
+static UIImageView *rasterizedView(UIView *view)
+{
+    view.layer.magnificationFilter = kCAFilterNearest;
+    UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.opaque, 0.0);
+    [view.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return [[UIImageView alloc] initWithImage:img];
 }
 
-@end
