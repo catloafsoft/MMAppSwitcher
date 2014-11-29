@@ -29,7 +29,12 @@ static UIImageView *rasterizedView(UIView *view);
     dispatch_once(&onceToken, ^{
         _sharedInstance = [MMAppSwitcher new];
         _sharedInstance.originalWindow = [[UIApplication sharedApplication] keyWindow];
-        _sharedInstance.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        UIScreen *screen = [UIScreen mainScreen];
+        if ([screen respondsToSelector:@selector(nativeBounds)]) { // iOS 8+
+            _sharedInstance.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] nativeBounds]];
+        } else {
+            _sharedInstance.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        }
         _sharedInstance.window.backgroundColor = [UIColor blackColor];
         _sharedInstance.window.windowLevel = UIWindowLevelStatusBar;
     });
@@ -63,13 +68,13 @@ static UIImageView *rasterizedView(UIView *view);
 - (void)loadCard {
     if ([self.datasource respondsToSelector:@selector(appSwitcher:viewForCardWithSize:)]) {
         UIView *view = [self.datasource appSwitcher:self viewForCardWithSize:[self cardSizeForCurrentOrientation]];
+        [self.view removeFromSuperview];
         if (view) {
-            [self.view removeFromSuperview];
             self.view = rasterizedView(view);
             self.view.frame = (CGRect){0, 0, self.window.bounds.size};
+            self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             [self.window addSubview:self.view];
         } else {
-            [self.view removeFromSuperview];
             self.view = nil;
             self.window.hidden = YES;
         }
@@ -84,11 +89,7 @@ static UIImageView *rasterizedView(UIView *view);
 
 - (BOOL)viewControllerBasedStatusBarAppearanceEnabled {
     CFBooleanRef viewControllerBasedStatusBarAppearance = CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), (CFStringRef)@"UIViewControllerBasedStatusBarAppearance");
-    if (viewControllerBasedStatusBarAppearance==kCFBooleanTrue) {
-        return YES;
-    } else {
-        return NO;
-    }
+    return (viewControllerBasedStatusBarAppearance==kCFBooleanTrue);
 }
 
 - (CGSize)cardSizeForCurrentOrientation {
