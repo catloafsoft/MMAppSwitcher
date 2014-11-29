@@ -37,17 +37,23 @@ static UIImageView *rasterizedView(UIView *view);
 }
 
 - (void)setDataSource:(id<MMAppSwitcherDataSource>)dataSource {
-    _datasource = dataSource;
-    if (_datasource) {
-        [self enableNotifications];
-    } else {
+    if (_datasource && !dataSource) {
         [self disableNotifications];
+    } else if (!_datasource && dataSource) {
+        [self enableNotifications];
     }
+    _datasource = dataSource;
 }
 
 - (void)enableNotifications {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationDidBecomeActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(appWillEnterForeground)
+                                                 name:UIApplicationDidBecomeActiveNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(appWillEnterBackground)
+                                                 name:UIApplicationWillResignActiveNotification
+                                               object:nil];
 }
 
 - (void)disableNotifications {
