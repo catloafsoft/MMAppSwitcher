@@ -31,9 +31,12 @@ static UIImageView *rasterizedView(UIView *view);
         _sharedInstance.originalWindow = [[UIApplication sharedApplication] keyWindow];
         UIScreen *screen = [UIScreen mainScreen];
         if ([screen respondsToSelector:@selector(nativeBounds)]) { // iOS 8+
-            _sharedInstance.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] nativeBounds]];
+            CGRect frame = CGRectMake(0.0f, 0.0f,
+                                      screen.nativeBounds.size.width/screen.nativeScale,
+                                      screen.nativeBounds.size.height/screen.nativeScale);
+            _sharedInstance.window = [[UIWindow alloc] initWithFrame:frame];
         } else {
-            _sharedInstance.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+            _sharedInstance.window = [[UIWindow alloc] initWithFrame:[screen bounds]];
         }
         _sharedInstance.window.backgroundColor = [UIColor blackColor];
         _sharedInstance.window.windowLevel = UIWindowLevelStatusBar;
